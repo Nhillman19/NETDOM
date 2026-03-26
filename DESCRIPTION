@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Sarah Weinstein <sarah.m.weinstein@temple.edu>
 Maintainer: Sarah Weinstein <sarah.m.weinstein@temple.edu>
 Description: R package to implement NEST method for testing enrichment of brain-phenotype associations, using an approach based on GSEA.
-License: What license is it under?
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3
