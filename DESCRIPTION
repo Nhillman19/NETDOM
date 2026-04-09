@@ -3,7 +3,7 @@ Type: Package
 Title: Network Enrichment Testing Using Ordinal Dominance Curves (NETDOM)
 Version: 0.1.0
 Author: Noah Hillman <Noah.Hillman@pennmedicine.upenn.edu>
-Maintainer: Sarah Weinstein <Noah.Hillman@pennmedicine.upenn.edu>
+Maintainer: Noah Hillman <Noah.Hillman@pennmedicine.upenn.edu>
 Description: R package to implement NETDOM method for testing whether brain-behavior associations are particularly strong (i.e., enriched) within a network of interest.
 License: GPL-3
 Encoding: UTF-8
