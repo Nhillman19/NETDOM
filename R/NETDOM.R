@@ -217,7 +217,7 @@ NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores 
   out = list()
 
   if ("everything" %in% what.to.return){
-    out$pval.NETDOC.list = pval.NETDOC.list
+    out$pval.NETDOM.list = pval.NETDOM.list
     out$pval.zeroCoef.list = pval.zeroCoef.list
     out$ES = ES.list
     out$T.obs = statFun.out$T.obs
