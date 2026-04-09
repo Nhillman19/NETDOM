@@ -10,18 +10,21 @@
 #'@param args A list of arguments required by the selected `statFun`. Specific arguments depend on the chosen method:
 #'   \describe{
 #'     \item{"lm"}{Requires `X` (design matrix), `y` (response variable). Optional: `Z` (covariates), `type`, `FL`, `getNull`, `n.perm`.}
-#'     \item{"lm.fast"}{Requires `X` (design matrix), `y` (response variable). Optional: `Z` (covariates), `type`, `FL`, `getNull`, `n.perm`.}  
+#'     \item{"lm.fast"}{Requires `X` (design matrix), `y` (response variable). Optional: `Z` (covariates), `type`, `FL`, `getNull`, `n.perm`.}
 #'     \item{"gam.mvwald"}{Requires `X`, `dat`, `gam.formula`, `lm.formula`, `y.in.gam`, `y.in.lm`.}
 #'     \item{"gam.deltaRsq"}{Requires `X`, `dat`, `gam.full.formula`, `gam.null.formula`, `lm.formula`, `y.in.gam`, `y.in.lm`.}
 #'     \item{"custom"}{Depends on the custom function implementation and should match the arguments specified in `statFun.custom`.}
 #'   }
 #'@param net.maps A list of vectors representing network maps. Each vector contains 0s (outside network/ROI) and 1s (inside network/ROI). The length of each vector must match the number of columns in `X`.
 #'@param direction A string indicating the direction of testing. Options are `"right"` for testing positive associations and `"left"` for testing negative associations.
+#'@param one.sided Logical. If `TRUE`, performs one-sided testing. Default is `TRUE`.
 #'@param n.cores Integer. The number of cores to use for parallel processing. Default is `1`.
 #'@param seed Integer. Random seed for reproducibility. Default is `NULL`.
 #'@param what.to.return A character vector specifying the outputs to return. Options include:
 #'   \describe{
 #'     \item{"pval"}{P-values for each network (default).}
+#'     \item{"ES"}{Enrichment scores (observed and null distributions).}
+#'     \item{"ES.obs"}{Observed enrichment scores.}
 #'     \item{"T.obs"}{Observed test statistics.}
 #'     \item{"T.null"}{Null test statistics.}
 #'     \item{"everything"}{All of the above outputs.}
@@ -30,7 +33,7 @@
 #'@return A list containing outputs specified in `what.to.return`. Default is p-values for each network.
 #'@export
 #' 
-NETDOM = function(statFun, args, net.maps, direction, n.cores = 1, seed = NULL, what.to.return = c("pval"), statFun.custom=NULL){
+NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores = 1, seed = NULL, what.to.return = c("pval"), statFun.custom=NULL){
 
   # check input requirements:
   if (!is.list(net.maps)){
@@ -127,7 +130,7 @@ NETDOM = function(statFun, args, net.maps, direction, n.cores = 1, seed = NULL, 
 
   # Get p-values for NETDOM for each network map
 
-  NETDOM.list = lapply(net.maps,FUN = function(net.map){
+  pval.NETDOM.list = lapply(net.maps,FUN = function(net.map){
     t_trim <- seq(0,.95,by = .05)
     if(direction == "right") {
       in_obs_ord <- statFun.out$T.obs[net.map == 1] 
@@ -138,12 +141,17 @@ NETDOM = function(statFun, args, net.maps, direction, n.cores = 1, seed = NULL, 
     }
 
     out_cdf <- ecdf(out_obs_ord)
+    t <- seq(0,1,length = length(out_obs_ord))
+    x2_cdf <- ecdf(out_obs_ord)
+    x2_comp_x1_quant <- x2_cdf(quantile(in_obs_ord,probs = t)) - t
+    obs.odc <- unlist(lapply(t_trim,FUN = function(x) {
+      indx <- (1+floor(x*length(t))):length(t)
+      trapz(t[indx],x2_comp_x1_quant[indx])
+    }))
+
+    
     l_out <- sum(net.map == 0)
     t <- seq(0,1,length = l_out)
-    out_cdf <- ecdf(out_obs_ord)
-    out_comp_in_quant <- out_cdf(quantile(in_obs_ord,probs = t)) - t
-    odc_val_sum <- cumtrapz(t,out_comp_in_quant)
-    obs.odc <- odc_val_sum[l_out] - odc_val_sum[(1+floor(t_trim*l_out))]
     if(direction == "left"){
       mult <- -1
     } else {
@@ -155,8 +163,8 @@ NETDOM = function(statFun, args, net.maps, direction, n.cores = 1, seed = NULL, 
       out_stat_ord <- mult*stat_vec[net.map == 0]
       out_cdf <- ecdf(out_stat_ord)
       out_comp_in_quant <- out_cdf(quantile(in_stat_ord,probs = t)) - t
-      odc_val_sum <- cumtrapz(t,out_comp_in_quant)
-      odc_val <- odc_val_sum[l_out] - odc_val_sum[(1+floor(t_trim*l_out))]
+      odc_val_cum <- cumtrapz(t,out_comp_in_quant)
+      odc_val <- odc_val_cum[l_out] - odc_val_cum[(1+floor(t_trim*l_out))]
       return(odc_val)
     },mc.cores = n.cores)
   
@@ -209,14 +217,16 @@ NETDOM = function(statFun, args, net.maps, direction, n.cores = 1, seed = NULL, 
   out = list()
 
   if ("everything" %in% what.to.return){
-    out$NETDOM.list = NETDOM.list
+    out$pval.NETDOC.list = pval.NETDOC.list
     out$pval.zeroCoef.list = pval.zeroCoef.list
+    out$pval.RIGEA.list = pval.RIGEA.list
+    out$ES = ES.list
     out$T.obs = statFun.out$T.obs
     out$T.null = statFun.out$T.null
     return(out)
   } else{
     if ("pval" %in% what.to.return){ # default is to just return p-values
-      out$NETDOM.list = lapply(NETDOM.list,FUN = function(x) {x$Diff_pval_odc})
+      out$pval.NETDOM.list = pval.NETDOM.list
       out$pval.zeroCoef.list = pval.zeroCoef.list
     }
 
@@ -226,14 +236,6 @@ NETDOM = function(statFun, args, net.maps, direction, n.cores = 1, seed = NULL, 
 
     if ("T.null" %in% what.to.return){
       out$T.null = statFun.out$T.null
-    }
-
-    if ("Gamma.opt" %in% what.to.return){
-      out$Gamma.opt = lapply(NETDOM.list,FUN = function(x) {x$Gamma_opt})
-    }
-
-    if ("Gamma.null" %in% what.to.return){
-      out$Gamma.null = lapply(NETDOM.list,FUN = function(x) {x$Null_gamma_opts})
     }
     return(out)
   }
