@@ -100,7 +100,7 @@ NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores 
                                       y.permute = args$y.permute,
                                       n.cores = n.cores, seed = seed,
                                       n.perm = args$n.perm,
-                                      getNull = TRUE # if doing this inside NEST function, assume testing is being done (if just want to get map, could just use the statFun function directly)
+                                      getNull = TRUE # if doing this inside NETDOM function, assume testing is being done (if just want to get map, could just use the statFun function directly)
                                       )
     }else{
       message("fix args!")
@@ -219,7 +219,6 @@ NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores 
   if ("everything" %in% what.to.return){
     out$pval.NETDOC.list = pval.NETDOC.list
     out$pval.zeroCoef.list = pval.zeroCoef.list
-    out$pval.RIGEA.list = pval.RIGEA.list
     out$ES = ES.list
     out$T.obs = statFun.out$T.obs
     out$T.null = statFun.out$T.null
