@@ -2,7 +2,7 @@
 % Please edit documentation in R/statFun.gam.deltaRsq.R
 \name{statFun.gam.deltaRsq}
 \alias{statFun.gam.deltaRsq}
-\title{statFun.gam.deltaRsq() will be called by NEST_audrey() if NEST argument statFun=="gam.deltaRsq"}
+\title{statFun.gam.deltaRsq() will be called by NETDOM() if NETDOM argument statFun=="gam.deltaRsq"}
 \usage{
 statFun.gam.deltaRsq(
   X,
@@ -24,6 +24,10 @@ statFun.gam.deltaRsq(
 
 \item{dat}{matrix including phenotype and any covariates. make sure all columns in dat are names}
 
+\item{gam.full.formula}{user-specified formula for gam fit at each vertex (in each gam, outcome will be a different column of X and the right side of the formula should include variables included in dat matrix)}
+
+\item{gam.null.formula}{user-specified null formula for gam fit at each vertex (in each gam, outcome will be a different column of X and the right side of the formula should nested within gam.full.formula)}
+
 \item{lm.formula}{user-specified formula for lm fit at each vertex (purpose is to get the sign of the delta adjusted R-squared)}
 
 \item{y.in.gam}{character specifying how the phenotype variable can be identified in gam. if phenotype is included as a linear term in the gam formula, this could just be the variable name. if there's a smooth term for the phenotype, it may be something like s(y)}
@@ -39,9 +43,7 @@ statFun.gam.deltaRsq(
 \item{n.perm}{number of permutations to conduct for inference. default is 999 (i.e. minimum p-value 1/1000)}
 
 \item{getNull}{whether to obtain null distribution vs. just get observed map of statistics. default will be TRUE inside NEST function, but the statFun function will then be recursively called to get null distribution and getNull will then switch to FALSE}
-
-\item{gam.formula}{user-specified formula for gam fit at each vertex (in each gam, outcome will be a different column of X and the right side of the formula should include variables included in dat matrix)}
 }
 \description{
-statFun.gam.deltaRsq() will be called by NEST_audrey() if NEST argument statFun=="gam.deltaRsq"
+statFun.gam.deltaRsq() will be called by NETDOM() if NETDOM argument statFun=="gam.deltaRsq"
 }

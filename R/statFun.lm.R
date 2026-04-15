@@ -1,4 +1,4 @@
-#' statFun.lm() will be called by NEST() if NEST argument statFun=="lm"
+#' statFun.lm() will be called by NETDOM() if NETDOM argument statFun=="lm"
 #'@param X n x p matrix (n = number of subjects, p = number of image locations)
 #'@param y vector length n with phenotype measurements for each subject
 #'@param Z vector (length n) or matrix (number of rows = n) with covariates to be adjusted for in lm. default Z = 1 assumes no covariates (i.e. Z=1 becomes placeholder for the intercept)
@@ -28,7 +28,12 @@ statFun.lm = function(X, y, Z = 1, type = "coef", n.cores = 1, seed = NULL, FL =
   if (FL == FALSE){ # no freedman-lane (assume independence between y and Z)
     stat.obs = unlist(mclapply(1:ncol(X), FUN = function(v){
       # observed statistic:
-      fullmod = lm(X[,v] ~ y + Z)
+      if(identical(Z,1)){
+        fullmod = lm(X[,v] ~ y)
+      } else {
+        fullmod = lm(X[,v] ~ y + Z)
+      }
+      
       obs.stat.v = summary(fullmod)$coefficients["y",type.ind]
 
       return(obs.stat.v)
@@ -36,34 +41,45 @@ statFun.lm = function(X, y, Z = 1, type = "coef", n.cores = 1, seed = NULL, FL =
     }, mc.cores = n.cores))
 
     if (getNull == TRUE){ # recursive function used below -- specifying getNull = FALSE so that we don't get a null distribution for the null iterations
-      stat.null = lapply(1:n.perm, FUN = function(k){
+      null.stat = lapply(1:n.perm, FUN = function(k){
         statFun.lm(X = X, y = y[perm.ind[[k]]], Z = Z, type = type, n.cores = n.cores, seed = seed, FL = FALSE, getNull = FALSE)$T.obs
       })
 
-      #stat.null = do.call("cbind",null.stat)
-
+      stat.null = do.call("rbind",null.stat)
       return(list(T.obs = stat.obs,
                   T.null = stat.null))
     } else{
       return(list(T.obs = stat.obs))
     }
 
-
   }  else{ # do freedman-lane
     if (getNull == TRUE){
       FL.out = mclapply(1:ncol(X), FUN = function(v){
         # observed statistic:
-        fullmod = lm(X[,v] ~ y + Z)
+        if(identical(Z,1)){
+          fullmod = lm(X[,v] ~ y)
+        } else {
+          fullmod = lm(X[,v] ~ y + Z)
+        }
         obs.stat.v = summary(fullmod)$coefficients["y",type.ind]
-
         # under H0:
-        reducedmod.v = lm(X[,v] ~ Z)
+        if(identical(Z,1)){
+          reducedmod.v = lm(X[,v] ~ 1)
+        } else {
+          reducedmod.v = lm(X[,v] ~ Z)
+        }
+
         reducedmod.resid.v = matrix(resid(reducedmod.v), ncol = 1)
 
         null.stat.v = sapply(1:n.perm, FUN = function(k){
           permX.v.k = reducedmod.resid.v[perm.ind[[k]],] + reducedmod.v$fitted.values # permute residuals + add back fitted values from reduced model
           # Should this be permX.v.k? Because permX.k is not defined and could cause an error.
-          fullmod.permX.v.k = lm(permX.v.k ~ y + Z) # refit full model using permuted data
+          if(identical(Z,1)){
+            fullmod.permX.v.k = lm(permX.v.k ~ y)
+          } else {
+            fullmod.permX.v.k = lm(permX.v.k ~ y + Z)
+          }
+           # refit full model using permuted data
           #fullmod.permX.v.k = lm(permX.k ~ y + Z) # refit full model using permuted data
           null.stat.v.k = summary(fullmod.permX.v.k)$coefficients["y",type.ind]
           return(null.stat.v.k)
@@ -88,5 +104,4 @@ statFun.lm = function(X, y, Z = 1, type = "coef", n.cores = 1, seed = NULL, FL =
     }
 
   }
-
 }

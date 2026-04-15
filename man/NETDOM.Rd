@@ -9,7 +9,6 @@ NETDOM(
   args,
   net.maps,
   direction,
-  one.sided = TRUE,
   n.cores = 1,
   seed = NULL,
   what.to.return = c("pval"),
@@ -28,7 +27,7 @@ NETDOM(
 \item{args}{A list of arguments required by the selected `statFun`. Specific arguments depend on the chosen method:
 \describe{
   \item{"lm"}{Requires `X` (design matrix), `y` (response variable). Optional: `Z` (covariates), `type`, `FL`, `getNull`, `n.perm`.}
-  \item{"lm.fast"}{Requires `X` (design matrix), `y` (response variable). Optional: `Z` (covariates), `type`, `FL`, `getNull`, `n.perm`.}  
+  \item{"lm.fast"}{Requires `X` (design matrix), `y` (response variable). Optional: `Z` (covariates), `type`, `FL`, `getNull`, `n.perm`.}
   \item{"gam.mvwald"}{Requires `X`, `dat`, `gam.formula`, `lm.formula`, `y.in.gam`, `y.in.lm`.}
   \item{"gam.deltaRsq"}{Requires `X`, `dat`, `gam.full.formula`, `gam.null.formula`, `lm.formula`, `y.in.gam`, `y.in.lm`.}
   \item{"custom"}{Depends on the custom function implementation and should match the arguments specified in `statFun.custom`.}
@@ -37,8 +36,6 @@ NETDOM(
 \item{net.maps}{A list of vectors representing network maps. Each vector contains 0s (outside network/ROI) and 1s (inside network/ROI). The length of each vector must match the number of columns in `X`.}
 
 \item{direction}{A string indicating the direction of testing. Options are `"right"` for testing positive associations and `"left"` for testing negative associations.}
-
-\item{one.sided}{Logical. If `TRUE`, performs one-sided testing. Default is `TRUE`.}
 
 \item{n.cores}{Integer. The number of cores to use for parallel processing. Default is `1`.}
 

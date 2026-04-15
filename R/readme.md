@@ -3,10 +3,9 @@ Implementation of NETDOM in R
 
 ## Details about `statFun` options
 The `statFun` argument determines how location-specific test statistics ("T(v)") are computed. We've provided several built-in options (e.g., `statFun='lm'` or `statFun='gam.deltaRsq'`), and there is also an option to specify a custom one (`statFun='custom'`).
-
 The code for NETDOM is largely derived from the work of Sarah Weinstein on her method NEST ([@smweinst](https://github.com/smweinst/NEST)).
 
-Example code for implementing NETDOM in R
+Example code for implementing NETDOM in R.
 ================
 
 #### Step 1: Install the package
@@ -99,7 +98,7 @@ Arguments for NETDOM function:
 - `what.to.return`: specify what values to return. "everything" will include p-value, enrichment score, null distribution, etc. If left unspecified, the default is to return only the p-value for each network.
 ``` r
 out <- NETDOM(statFun = "lm.fast",
-            args = args.lm, # arguments defined above (specific to statFun="lm" setting)
+            args = args.lm, # arguments defined above (specific to statFun="lm.fast" setting)
             net.maps = net, 
             direction = "right",
             n.cores = 1, 

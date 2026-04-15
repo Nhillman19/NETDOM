@@ -29,7 +29,7 @@ if (getNull == TRUE){
     if (is.matrix(Z)) {
         mat <- cbind(1,Z,y)
         mat_red <- cbind(1,Z)
-      } else if (Z == 1) {
+      } else if (identical(Z,1)) {
         mat <- cbind(1,y)
         mat_red <- mat[,1]
     }
@@ -51,9 +51,9 @@ if (getNull == TRUE){
   }
   # Recursive function used below 
   if (getNull == TRUE) {
-    stat_null <- mclapply(1:n.perm, FUN = function(k){
+    stat_null <- do.call("rbind",mclapply(1:n.perm, FUN = function(k){
     statFun.lm.fast(X = X, y = y[perm_ind[[k]]], Z = Z, type = type, n.cores = n.cores, seed = seed, FL = FALSE, getNull = FALSE)$T.obs
-  },num_cores = n.cores)
+  },mc.cores = n.cores))
     return(list(T.obs = stat_obs,T.null = stat_null))
     } else {
       return(list(T.obs = stat_obs))
@@ -63,7 +63,7 @@ if (getNull == TRUE){
       if (is.matrix(Z)) {
         mat <- cbind(1,Z,y)
         mat_red <- cbind(1,Z)
-      } else if (Z == 1) {
+      } else if (identical(Z,1)) {
         mat <- cbind(1,y)
         mat_red <- mat[,1]
       }
@@ -99,7 +99,7 @@ if (getNull == TRUE){
       },mc.cores = n.cores)
 
       stat_obs <- stat[[(n.perm + 1)]]
-      stat_null <- stat[1:n.perm]
+      stat_null <- do.call("rbind",stat[1:n.perm])
       return(list(T.obs = stat_obs,T.null = stat_null))
     } else {
       message("specify FL = FALSE if getNull = FALSE")

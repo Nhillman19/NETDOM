@@ -1,5 +1,8 @@
 #' NETDOM function
 #'@importFrom parallel mclapply
+#'@importFrom pracma trapz cumtrapz
+#'@import stats 
+#'@importFrom mgcv gam
 #'@param statFun A string specifying the statistical method to use. Options include:
 #'   \describe{
 #'     \item{"lm"}{Linear regression model (`statFun.lm`).}
@@ -17,14 +20,11 @@
 #'   }
 #'@param net.maps A list of vectors representing network maps. Each vector contains 0s (outside network/ROI) and 1s (inside network/ROI). The length of each vector must match the number of columns in `X`.
 #'@param direction A string indicating the direction of testing. Options are `"right"` for testing positive associations and `"left"` for testing negative associations.
-#'@param one.sided Logical. If `TRUE`, performs one-sided testing. Default is `TRUE`.
 #'@param n.cores Integer. The number of cores to use for parallel processing. Default is `1`.
 #'@param seed Integer. Random seed for reproducibility. Default is `NULL`.
 #'@param what.to.return A character vector specifying the outputs to return. Options include:
 #'   \describe{
 #'     \item{"pval"}{P-values for each network (default).}
-#'     \item{"ES"}{Enrichment scores (observed and null distributions).}
-#'     \item{"ES.obs"}{Observed enrichment scores.}
 #'     \item{"T.obs"}{Observed test statistics.}
 #'     \item{"T.null"}{Null test statistics.}
 #'     \item{"everything"}{All of the above outputs.}
@@ -33,7 +33,7 @@
 #'@return A list containing outputs specified in `what.to.return`. Default is p-values for each network.
 #'@export
 #' 
-NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores = 1, seed = NULL, what.to.return = c("pval"), statFun.custom=NULL){
+NETDOM = function(statFun, args, net.maps, direction, n.cores = 1, seed = NULL, what.to.return = c("pval"), statFun.custom=NULL){
 
   # check input requirements:
   if (!is.list(net.maps)){
@@ -122,14 +122,12 @@ NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores 
                                       n.cores = n.cores, seed = seed,
                                       n.perm = args$n.perm,
                                       getNull = TRUE)
-    }else{
+    } else{
       message("fix args!")
       return(NULL)
     }
   }
-
   # Get p-values for NETDOM for each network map
-
   pval.NETDOM.list = lapply(net.maps,FUN = function(net.map){
     t_trim <- seq(0,.95,by = .05)
     if(direction == "right") {
@@ -158,7 +156,7 @@ NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores 
       mult <- 1
     }
     null.odc <- mclapply(1:args$n.perm,FUN = function(k) {
-      stat_vec <- statFun.out$T.null[[k]]
+      stat_vec <- statFun.out$T.null[k,]
       in_stat_ord <- mult*stat_vec[net.map == 1]
       out_stat_ord <- mult*stat_vec[net.map == 0]
       out_cdf <- ecdf(out_stat_ord)
@@ -198,9 +196,8 @@ NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores 
 
   coef.zero.list = mclapply(net.maps, FUN = function(net.map){
     T.in.mean = mean(statFun.out$T.obs[net.map == 1])
-
     T.in.null = unlist(lapply(1:args$n.perm, FUN = function(k) {  
-          mean(statFun.out$T.null[[k]][net.map == 1])
+          mean(statFun.out$T.null[k,][net.map == 1])
     }))
     return(list(T.obs.mean = T.in.mean,
                 T.null.mean = T.in.null))
@@ -214,27 +211,31 @@ NETDOM = function(statFun, args, net.maps, direction, one.sided = TRUE, n.cores 
     }
   }, mc.cores = n.cores) 
 
-  out = list()
-
+  out <- list()
   if ("everything" %in% what.to.return){
-    out$pval.NETDOM.list = pval.NETDOM.list
-    out$pval.zeroCoef.list = pval.zeroCoef.list
-    out$ES = ES.list
-    out$T.obs = statFun.out$T.obs
-    out$T.null = statFun.out$T.null
+    out <- c(pval.NETDOM.list,
+             pval.zeroCoef.list,
+             list(statFun.out$T.obs),
+             list(statFun.out$T.null)
+    )
+    names(out) <- c("pval.NETDOM.list",
+                    "pval.zeroCoef",
+                    "T.obs",
+                    "T.null")
     return(out)
   } else{
     if ("pval" %in% what.to.return){ # default is to just return p-values
-      out$pval.NETDOM.list = pval.NETDOM.list
-      out$pval.zeroCoef.list = pval.zeroCoef.list
+      out <- c(pval.NETDOM.list,pval.zeroCoef.list)
+      names(out) <- c("pval.NETDOM.list","pval.zeroCoef")
     }
-
     if ("T.obs" %in% what.to.return){
-      out$T.obs = statFun.out$T.obs
+      out <- c(out,list(statFun.out$T.obs))
+      names(out) <- c(names(out),"T.obs")
     }
 
     if ("T.null" %in% what.to.return){
-      out$T.null = statFun.out$T.null
+      out <- c(out,list(statFun.out$T.null))
+      names(out) <- c(names(out),"T.null")
     }
     return(out)
   }

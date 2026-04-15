@@ -1,8 +1,9 @@
-# this is a custom statFun NEST function for computing delta adjusted rsq
-#' statFun.gam.deltaRsq() will be called by NEST_audrey() if NEST argument statFun=="gam.deltaRsq"
+# this is a custom statFun NETDOM function for computing delta adjusted rsq
+#' statFun.gam.deltaRsq() will be called by NETDOM() if NETDOM argument statFun=="gam.deltaRsq"
 #'@param X n x p matrix of image measurements (n = number of subjects, p = number of image locations)
 #'@param dat matrix including phenotype and any covariates. make sure all columns in dat are names
-#'@param gam.formula user-specified formula for gam fit at each vertex (in each gam, outcome will be a different column of X and the right side of the formula should include variables included in dat matrix)
+#'@param gam.full.formula user-specified formula for gam fit at each vertex (in each gam, outcome will be a different column of X and the right side of the formula should include variables included in dat matrix)
+#'@param gam.null.formula user-specified null formula for gam fit at each vertex (in each gam, outcome will be a different column of X and the right side of the formula should nested within gam.full.formula)
 #'@param lm.formula user-specified formula for lm fit at each vertex (purpose is to get the sign of the delta adjusted R-squared)
 #'@param y.in.gam character specifying how the phenotype variable can be identified in gam. if phenotype is included as a linear term in the gam formula, this could just be the variable name. if there's a smooth term for the phenotype, it may be something like s(y)
 #'@param y.in.lm character specifying how the phenotype variable can be identified in lm. again, might just be the name of the variable, but could be different (e.g., if testing an interaction term)

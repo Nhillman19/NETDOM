@@ -2,7 +2,7 @@
 % Please edit documentation in R/statFun.lm.R
 \name{statFun.lm}
 \alias{statFun.lm}
-\title{statFun.lm() will be called by NEST() if NEST argument statFun=="lm"}
+\title{statFun.lm() will be called by NETDOM() if NETDOM argument statFun=="lm"}
 \usage{
 statFun.lm(
   X,
@@ -36,5 +36,5 @@ statFun.lm(
 \item{getNull}{whether to obtain null distribution vs. just get observed map of statistics. default will be TRUE inside NEST function, but the statFun function will then be recursively called to get null distribution and getNull will then switch to FALSE}
 }
 \description{
-statFun.lm() will be called by NEST() if NEST argument statFun=="lm"
+statFun.lm() will be called by NETDOM() if NETDOM argument statFun=="lm"
 }
